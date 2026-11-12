@@ -34,7 +34,7 @@
     "step": {
       "init": {
         "title": "Calendar name and updates",
-        "description": "Poll every 24, 8, 4 or another number of hours (1–168).",
+        "description": "Poll every 24, 8, 4 or another number of hours (1–24).",
         "data": {
           "interval_hours": "Update interval (hours)",
           "name": "Student name (optional)"

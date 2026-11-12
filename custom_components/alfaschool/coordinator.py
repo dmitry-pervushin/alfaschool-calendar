@@ -10,7 +10,12 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .client import AlfaSchoolClient
-from .const import CONF_INTERVAL_HOURS, DEFAULT_INTERVAL_HOURS, DOMAIN
+from .const import (
+    CONF_INTERVAL_HOURS,
+    DEFAULT_INTERVAL_HOURS,
+    DOMAIN,
+    MAX_INTERVAL_HOURS,
+)
 from .exceptions import AuthenticationError, ScheduleError
 from .parser import MOSCOW
 
@@ -33,7 +38,10 @@ class AlfaSchoolCoordinator(DataUpdateCoordinator[list[dict]]):
     def __init__(
         self, hass: HomeAssistant, entry: ConfigEntry, client: AlfaSchoolClient
     ):
-        hours = entry.options.get(CONF_INTERVAL_HOURS, DEFAULT_INTERVAL_HOURS)
+        hours = min(
+            entry.options.get(CONF_INTERVAL_HOURS, DEFAULT_INTERVAL_HOURS),
+            MAX_INTERVAL_HOURS,
+        )
         super().__init__(
             hass,
             _LOGGER,

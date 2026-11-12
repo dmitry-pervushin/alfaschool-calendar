@@ -5,6 +5,7 @@ from types import MappingProxyType
 from unittest.mock import AsyncMock, patch
 
 import aiohttp
+import probatio
 import pytest
 from aiohttp import web
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -13,6 +14,7 @@ from homeassistant.helpers import entity_registry as er
 
 from custom_components.alfaschool.calendar import AlfaSchoolCalendar
 from custom_components.alfaschool.client import AlfaSchoolClient
+from custom_components.alfaschool.config_flow import interval_schema
 from custom_components.alfaschool.coordinator import AlfaSchoolCoordinator
 from custom_components.alfaschool.exceptions import AuthenticationError, ScheduleError
 from custom_components.alfaschool.parser import parse_schedule
@@ -107,7 +109,7 @@ async def test_authentication_and_page_errors(school_server):
         parse_schedule(markup(when="bad date"))
 
 
-@pytest.mark.parametrize("hours", [4, 8, 24])
+@pytest.mark.parametrize("hours", [4, 8, 24, 168])
 async def test_calendar_overlap_current_next_cancellation_and_cached_reads(hass, hours):
     entry = make_entry(hours)
     lessons = parse_schedule(
@@ -117,7 +119,7 @@ async def test_calendar_overlap_current_next_cancellation_and_cached_reads(hass,
     client.async_fetch_months.return_value = lessons
     coordinator = AlfaSchoolCoordinator(hass, entry, client)
     coordinator.async_set_updated_data(await coordinator._async_update_data())
-    assert coordinator.update_interval == timedelta(hours=hours)
+    assert coordinator.update_interval == timedelta(hours=min(hours, 24))
     entity = AlfaSchoolCalendar(coordinator, entry)
     now = datetime(2025, 10, 7, 16, 30, tzinfo=timezone.utc)
     with patch("custom_components.alfaschool.calendar.dt_util.now", return_value=now):
@@ -136,6 +138,16 @@ async def test_calendar_overlap_current_next_cancellation_and_cached_reads(hass,
     assert client.async_fetch_months.call_count == count
     assert await entity.async_get_events(hass, lessons[0]["end"], end) == []
     assert await entity.async_get_events(hass, start, lessons[0]["start"]) == []
+
+
+def test_update_interval_maximum_and_legacy_settings():
+    schema = interval_schema()
+    for hours in (1, 4, 8, 24):
+        assert schema({"interval_hours": hours})["interval_hours"] == hours
+    for hours in (0, 25, 168):
+        with pytest.raises(probatio.Invalid):
+            schema({"interval_hours": hours})
+    assert interval_schema(168)({})["interval_hours"] == 24
 
 
 async def test_failure_preserves_snapshot_and_unavailable(hass):

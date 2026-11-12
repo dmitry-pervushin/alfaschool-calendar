@@ -10,7 +10,12 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .client import AlfaSchoolClient
-from .const import CONF_INTERVAL_HOURS, DEFAULT_INTERVAL_HOURS, DOMAIN
+from .const import (
+    CONF_INTERVAL_HOURS,
+    DEFAULT_INTERVAL_HOURS,
+    DOMAIN,
+    MAX_INTERVAL_HOURS,
+)
 from .exceptions import AuthenticationError, ScheduleError
 from .parser import MOSCOW
 
@@ -19,9 +24,9 @@ def interval_schema(default=DEFAULT_INTERVAL_HOURS):
     """Support daily, eight-hour, four-hour and other whole-hour intervals."""
     return vol.Schema(
         {
-            vol.Required(CONF_INTERVAL_HOURS, default=default): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=168)
-            )
+            vol.Required(
+                CONF_INTERVAL_HOURS, default=min(default, MAX_INTERVAL_HOURS)
+            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=MAX_INTERVAL_HOURS))
         }
     )
 
