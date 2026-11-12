@@ -1,0 +1,45 @@
+{
+  "title": "Alfa School",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Alfa School",
+        "description": "Connect your Alfa School account to create a lesson calendar. The student name appears in the calendar name. Leave it blank to use the login.",
+        "data": {
+          "username": "Login (email)",
+          "password": "Password",
+          "interval_hours": "Update interval (hours)",
+          "name": "Student name (optional)"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Sign in again",
+        "description": "Enter your updated Alfa School password.",
+        "data": {
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid login or password.",
+      "cannot_connect": "Cannot connect to Alfa School.",
+      "invalid_schedule": "The schedule could not be read. The website format may have changed."
+    },
+    "abort": {
+      "already_configured": "This account is already configured.",
+      "reauth_successful": "Authentication updated successfully."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Calendar name and updates",
+        "description": "Poll every 24, 8, 4 or another number of hours (1–168).",
+        "data": {
+          "interval_hours": "Update interval (hours)",
+          "name": "Student name (optional)"
+        }
+      }
+    }
+  }
+}
