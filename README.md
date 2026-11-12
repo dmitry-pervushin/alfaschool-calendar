@@ -1,5 +1,7 @@
 # Alfa School Calendar для Home Assistant
 
+![Иконка интеграции](custom_components/alfaschool/brand/icon.png)
+
 Пользовательская интеграция создаёт отдельный календарь занятий для каждого
 аккаунта непосредственно в Home Assistant. Настройка через интерфейс: логин,
 пароль и интервал опроса. Имя ученика определяется автоматически по профилю.
@@ -167,6 +169,7 @@ python3.14 -m venv .venv
 .venv/bin/python -m pytest -q
 .venv/bin/ruff check custom_components tests
 .venv/bin/ruff format --check custom_components tests
+python3 scripts/package_release.py
 ```
 
 Тесты запускают настоящий HA во временном каталоге и локальный HTTP-сервер,
@@ -185,3 +188,7 @@ Alfa School не предоставляет использованный зде�
 Официальная документация HA:
 [календари](https://developers.home-assistant.io/docs/core/entity/calendar/),
 [опрос данных](https://developers.home-assistant.io/docs/integration_fetching_data/).
+
+Иконка интеграции — оригинальная иллюстрация настольного перекидного календаря
+с записью «Альфа школа, 09:00». Логотипы Alfa School и других организаций не используются.
+Изображения поставляются локально в `custom_components/alfaschool/brand/`.
