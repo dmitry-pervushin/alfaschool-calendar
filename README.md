@@ -11,10 +11,15 @@
 1. В терминале Home Assistant выполните:
 
    ```bash
-   git clone https://github.com/dmitry-pervushin/alfaschool-calendar.git /config/alfaschool-calendar
+   git clone https://dmitry-pervushin@github.com/dmitry-pervushin/alfaschool-calendar.git /config/alfaschool-calendar
    mkdir -p /config/custom_components
    ln -s /config/alfaschool-calendar/custom_components/alfaschool /config/custom_components/alfaschool
    ```
+
+   Репозиторий приватный. При запросе пароля GitHub введите Personal Access Token
+   с правом **Contents: Read-only** для этого репозитория. Обычный пароль GitHub
+   для Git не подходит. Токен не нужно включать в URL или команду.
+   Для обновления Git может снова запросить токен.
 
    Ссылка использует путь `/config`, одинаковый для терминала и контейнера HA Core.
    Если интеграция уже установлена копированием, сначала переместите её папку
@@ -46,8 +51,8 @@ Home Assistant создаёт `entity_id` из названия при перв�
 календари также сохраняют прежний `entity_id`. Если имя сущности или её ID
 изменены вручную в HA, интеграция сохраняет эти настройки пользователя.
 
-Также можно добавить `https://github.com/dmitry-pervushin/alfaschool-calendar`
-в HACS как пользовательский репозиторий типа **Integration**.
+Для приватного репозитория здесь описаны установка через авторизованный Git
+и скачивание ZIP из Releases после входа в GitHub.
 
 Обновление установки через Git:
 
