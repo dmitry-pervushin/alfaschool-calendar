@@ -21,12 +21,12 @@ from .parser import MOSCOW
 
 
 def interval_schema(default=DEFAULT_INTERVAL_HOURS):
-    """Support daily, eight-hour, four-hour and other whole-hour intervals."""
+    """Support manual-only updates or polling every 1–24 hours."""
     return vol.Schema(
         {
             vol.Required(
                 CONF_INTERVAL_HOURS, default=min(default, MAX_INTERVAL_HOURS)
-            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=MAX_INTERVAL_HOURS))
+            ): vol.All(vol.Coerce(int), vol.Range(min=0, max=MAX_INTERVAL_HOURS))
         }
     )
 

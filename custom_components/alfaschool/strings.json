@@ -8,7 +8,7 @@
         "data": {
           "username": "Login (email)",
           "password": "Password",
-          "interval_hours": "Update interval (hours)"
+          "interval_hours": "Update interval (hours; 0 = never)"
         }
       },
       "reauth_confirm": {
@@ -33,9 +33,9 @@
     "step": {
       "init": {
         "title": "Calendar name and updates",
-        "description": "The name is read from your profile; you can change it here. Poll every 1–24 hours.",
+        "description": "The name is read from your profile; you can change it here. Poll every 1–24 hours. 0 = never update automatically; manual updates only.",
         "data": {
-          "interval_hours": "Update interval (hours)",
+          "interval_hours": "Update interval (hours; 0 = never)",
           "name": "Student name (optional)"
         }
       }

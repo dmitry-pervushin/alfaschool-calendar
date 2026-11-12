@@ -47,9 +47,10 @@ class AlfaSchoolCoordinator(DataUpdateCoordinator[list[dict]]):
             _LOGGER,
             config_entry=entry,
             name=DOMAIN,
-            update_interval=timedelta(hours=hours),
+            update_interval=timedelta(hours=hours) if hours else None,
         )
         self.client = client
+        self.manual_updates = hours == 0
         self._requested_months: set[date] = set()
         self._loaded_months: set[date] = set()
 
@@ -68,7 +69,7 @@ class AlfaSchoolCoordinator(DataUpdateCoordinator[list[dict]]):
         return events
 
     async def async_get_events(self, start: datetime, end: datetime) -> list[dict]:
-        """Load uncached months once; repeated UI reads use the polling snapshot."""
+        """Read the snapshot; manual mode queues missing months for the next refresh."""
         if end <= start:
             return []
         # Include the preceding day for lessons crossing midnight/month boundaries.
@@ -77,7 +78,7 @@ class AlfaSchoolCoordinator(DataUpdateCoordinator[list[dict]]):
             end.astimezone(MOSCOW).date(),
         )
         self._requested_months.update(months)
-        if not months <= self._loaded_months:
+        if not self.manual_updates and not months <= self._loaded_months:
             await self.async_refresh()
         if not self.last_update_success:
             raise HomeAssistantError("Alfa School schedule is unavailable")

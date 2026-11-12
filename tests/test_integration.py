@@ -11,6 +11,7 @@ from aiohttp import web
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from custom_components.alfaschool.calendar import AlfaSchoolCalendar
 from custom_components.alfaschool.client import AlfaSchoolClient
@@ -145,9 +146,9 @@ async def test_calendar_overlap_current_next_cancellation_and_cached_reads(hass,
 
 def test_update_interval_maximum_and_legacy_settings():
     schema = interval_schema()
-    for hours in (1, 4, 8, 24):
+    for hours in (0, 1, 4, 8, 24):
         assert schema({"interval_hours": hours})["interval_hours"] == hours
-    for hours in (0, 25, 168):
+    for hours in (-1, 25, 168):
         with pytest.raises(probatio.Invalid):
             schema({"interval_hours": hours})
     assert interval_schema(168)({})["interval_hours"] == 24
@@ -460,3 +461,56 @@ def test_profile_name_excludes_other_people_comments_and_account_number():
     missing = AccountNameParser()
     missing.feed("<h2>Teacher name</h2>")
     assert missing.name is None
+
+
+async def test_manual_mode_does_not_schedule_or_fetch_on_calendar_reads(hass):
+    assert await async_setup_component(hass, "homeassistant", {})
+    with patch(
+        "custom_components.alfaschool.client.AlfaSchoolClient.async_fetch_months",
+        return_value=[],
+    ) as fetch:
+        flow = await hass.config_entries.flow.async_init(
+            "alfaschool", context={"source": "user"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            flow["flow_id"],
+            {
+                "username": "student@example.com",
+                "password": "secret",
+                "interval_hours": 0,
+            },
+        )
+        await hass.async_block_till_done()
+        entry = result["result"]
+        coordinator = entry.runtime_data
+        assert coordinator.update_interval is None
+        assert coordinator._unsub_refresh is None
+        initial_calls = fetch.call_count
+        start = datetime(2025, 10, 1, tzinfo=timezone.utc)
+        end = datetime(2025, 11, 1, tzinfo=timezone.utc)
+        assert await coordinator.async_get_events(start, end) == []
+        assert fetch.call_count == initial_calls
+        assert date(2025, 10, 1) in coordinator._requested_months
+        fetch.return_value = parse_schedule(markup())
+        await hass.services.async_call(
+            "homeassistant",
+            "update_entity",
+            {"entity_id": "calendar.alfa_school_student_example_com"},
+            blocking=True,
+        )
+        assert fetch.call_count == initial_calls + 1
+        assert len(await coordinator.async_get_events(start, end)) == 1
+        assert coordinator._unsub_refresh is None
+        options = await hass.config_entries.options.async_init(entry.entry_id)
+        await hass.config_entries.options.async_configure(
+            options["flow_id"], {"interval_hours": 4}
+        )
+        await hass.async_block_till_done()
+        assert entry.runtime_data.update_interval == timedelta(hours=4)
+        options = await hass.config_entries.options.async_init(entry.entry_id)
+        await hass.config_entries.options.async_configure(
+            options["flow_id"], {"interval_hours": 0}
+        )
+        await hass.async_block_till_done()
+        assert entry.runtime_data.update_interval is None
+        assert entry.runtime_data._unsub_refresh is None
