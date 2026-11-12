@@ -17,7 +17,7 @@ from custom_components.alfaschool.client import AlfaSchoolClient
 from custom_components.alfaschool.config_flow import interval_schema
 from custom_components.alfaschool.coordinator import AlfaSchoolCoordinator
 from custom_components.alfaschool.exceptions import AuthenticationError, ScheduleError
-from custom_components.alfaschool.parser import parse_schedule
+from custom_components.alfaschool.parser import AccountNameParser, parse_schedule
 
 LOGIN = '<form><input name="userpass"><input name="timestamp" value="123"></form>'
 EMPTY = '<table class="schedule"></table>'
@@ -54,7 +54,9 @@ async def school_server():
         if request.method == "POST":
             state["posted"] = dict(await request.post())
             response = web.Response(
-                text=LOGIN if state["reject"] else "<h1>Profile</h1>"
+                text=LOGIN
+                if state["reject"]
+                else '<a href="#nav-user"><div class="pill"><span> </span><div>Doe<br>Jane</div></div></a><span>Account 123</span>'
             )
             response.set_cookie("school_session", "student")
             return response
@@ -88,6 +90,7 @@ async def test_async_client_posts_form_and_deduplicates(school_server):
         assert len(events) == 1
         assert events[0]["start"].astimezone(timezone.utc).hour == 16
         assert events[0]["summary"] == "Alfa School — Итальянский"
+        assert client.student_name == "Doe Jane"
         assert school_server["posted"] == {
             "userlogin": "student@example.com",
             "userpass": "secret",
@@ -337,6 +340,9 @@ async def test_calendar_get_events_service(hass):
 )
 async def test_two_accounts_have_separate_calendars_and_events(hass, names, ids):
     async def fetch(client, months):
+        client.student_name = (
+            names[0] if client.username == "first@example.com" else names[1]
+        )
         lesson_id = "101" if client.username == "first@example.com" else "202"
         when = "07.10.2025 19:00:00" if lesson_id == "101" else "08.10.2025 19:00:00"
         return parse_schedule(markup(lesson_id=lesson_id, when=when))
@@ -355,12 +361,12 @@ async def test_two_accounts_have_separate_calendars_and_events(hass, names, ids)
                 {
                     "username": username,
                     "password": "secret",
-                    "name": name,
                     "interval_hours": 8,
                 },
             )
             await hass.async_block_till_done()
             entries.append(result["result"])
+            assert result["result"].data["name"] == name
         registry = er.async_get(hass)
         for index, entity_id in enumerate(ids):
             state = hass.states.get(entity_id)
@@ -388,9 +394,13 @@ async def test_two_accounts_have_separate_calendars_and_events(hass, names, ids)
 
 
 async def test_renaming_preserves_entity_id_unique_id_and_user_customization(hass):
+    async def fetch(client, months):
+        client.student_name = "Dmitry"
+        return []
+
     with patch(
         "custom_components.alfaschool.client.AlfaSchoolClient.async_fetch_months",
-        return_value=[],
+        new=fetch,
     ):
         flow = await hass.config_entries.flow.async_init(
             "alfaschool", context={"source": "user"}
@@ -400,7 +410,6 @@ async def test_renaming_preserves_entity_id_unique_id_and_user_customization(has
             {
                 "username": "student@example.com",
                 "password": "secret",
-                "name": "  Dmitry  ",
                 "interval_hours": 8,
             },
         )
@@ -411,7 +420,7 @@ async def test_renaming_preserves_entity_id_unique_id_and_user_customization(has
         unique_id = registry.async_get(entity_id).unique_id
         for new_name, expected_name in (
             ("Дмитрий Первушин", "Дмитрий Первушин"),
-            ("  ", "student@example.com"),
+            ("  ", "Dmitry"),
         ):
             options = await hass.config_entries.options.async_init(entry.entry_id)
             await hass.config_entries.options.async_configure(
@@ -439,3 +448,15 @@ async def test_renaming_preserves_entity_id_unique_id_and_user_customization(has
             == "Мой календарь"
         )
         assert registry.async_get("calendar.my_lessons").unique_id == unique_id
+
+
+def test_profile_name_excludes_other_people_comments_and_account_number():
+    parser = AccountNameParser()
+    parser.feed("""<!-- <a href="#nav-user">Wrong name</a> -->
+        <h2>Teacher name</h2><a href="#nav-user"><div class="pill"><span> </span>
+        <div>Иванова<br>Анна&nbsp;Мария</div></div></a><span>Account 123</span>
+        <a href="#nav-user">Duplicate name</a>""")
+    assert parser.name == "Иванова Анна Мария"
+    missing = AccountNameParser()
+    missing.feed("<h2>Teacher name</h2>")
+    assert missing.name is None

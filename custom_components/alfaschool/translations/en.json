@@ -4,12 +4,11 @@
     "step": {
       "user": {
         "title": "Alfa School",
-        "description": "Connect your Alfa School account to create a lesson calendar. The student name appears in the calendar name. Leave it blank to use the login.",
+        "description": "Connect your Alfa School account to create a lesson calendar. The student name is read automatically from your profile.",
         "data": {
           "username": "Login (email)",
           "password": "Password",
-          "interval_hours": "Update interval (hours)",
-          "name": "Student name (optional)"
+          "interval_hours": "Update interval (hours)"
         }
       },
       "reauth_confirm": {
@@ -34,7 +33,7 @@
     "step": {
       "init": {
         "title": "Calendar name and updates",
-        "description": "Poll every 24, 8, 4 or another number of hours (1–24).",
+        "description": "The name is read from your profile; you can change it here. Poll every 1–24 hours.",
         "data": {
           "interval_hours": "Update interval (hours)",
           "name": "Student name (optional)"

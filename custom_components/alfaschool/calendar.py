@@ -45,7 +45,11 @@ class AlfaSchoolCalendar(CoordinatorEntity[AlfaSchoolCoordinator], CalendarEntit
     def __init__(self, coordinator: AlfaSchoolCoordinator, entry: ConfigEntry):
         super().__init__(coordinator)
         self._attr_unique_id = entry.entry_id
-        student = entry.options.get(CONF_NAME, "").strip() or entry.data[CONF_USERNAME]
+        student = (
+            entry.options.get(CONF_NAME, "").strip()
+            or entry.data.get(CONF_NAME)
+            or entry.data[CONF_USERNAME]
+        )
         self._attr_name = f"Alfa School — {student}"
 
     @property

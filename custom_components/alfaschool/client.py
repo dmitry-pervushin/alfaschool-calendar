@@ -8,7 +8,7 @@ from yarl import URL
 
 from .const import BASE_URL
 from .exceptions import AuthenticationError, ScheduleError
-from .parser import ScheduleParser, parse_schedule
+from .parser import AccountNameParser, ScheduleParser, parse_schedule
 
 
 class AlfaSchoolClient:
@@ -18,6 +18,7 @@ class AlfaSchoolClient:
         self.session = session
         self.username = username
         self.password = password
+        self.student_name: str | None = None
         self._lock = asyncio.Lock()
 
     async def _request(self, path: str, data: dict | None = None) -> str:
@@ -45,10 +46,14 @@ class AlfaSchoolClient:
         }
         if parser.timestamp:
             data["timestamp"] = parser.timestamp
+        html = await self._request("/profile", data)
         parser = ScheduleParser()
-        parser.feed(await self._request("/profile", data))
+        parser.feed(html)
         if parser.login:
             raise AuthenticationError("Credentials rejected")
+        account = AccountNameParser()
+        account.feed(html)
+        self.student_name = account.name
 
     async def async_fetch_months(self, months: set[date]) -> list[dict]:
         """Log in once and fetch a complete snapshot, deduplicated by lesson ID."""

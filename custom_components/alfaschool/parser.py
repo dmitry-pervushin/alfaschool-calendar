@@ -9,6 +9,33 @@ from .exceptions import AuthenticationError, ScheduleError
 MOSCOW = ZoneInfo("Europe/Moscow")
 
 
+class AccountNameParser(HTMLParser):
+    """Read the signed-in student's name from the account menu."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self._capture = False
+        self._parts = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "a" and dict(attrs).get("href") == "#nav-user" and not self._parts:
+            self._capture = True
+        if self._capture and tag == "br":
+            self._parts.append(" ")
+
+    def handle_data(self, data):
+        if self._capture:
+            self._parts.append(data)
+
+    def handle_endtag(self, tag):
+        if tag == "a":
+            self._capture = False
+
+    @property
+    def name(self) -> str | None:
+        return " ".join("".join(self._parts).split()) or None
+
+
 class ScheduleParser(HTMLParser):
     """Read actual lesson cards; busy blocks and modal duplicates are excluded."""
 

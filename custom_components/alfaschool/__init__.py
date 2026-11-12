@@ -2,7 +2,7 @@
 
 from aiohttp import CookieJar
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
@@ -23,6 +23,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = AlfaSchoolCoordinator(hass, entry, client)
     try:
         await coordinator.async_config_entry_first_refresh()
+        if client.student_name and not entry.data.get(CONF_NAME):
+            hass.config_entries.async_update_entry(
+                entry, data={**entry.data, CONF_NAME: client.student_name}
+            )
         entry.runtime_data = coordinator
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     except BaseException:

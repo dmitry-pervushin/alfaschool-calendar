@@ -45,14 +45,14 @@ class AlfaSchoolConfigFlow(ConfigFlow, domain=DOMAIN):
             month = datetime.now(MOSCOW).date().replace(day=1)
             await client.async_fetch_months({month})
         except AuthenticationError:
-            return "invalid_auth"
+            return "invalid_auth", None
         except ClientError, TimeoutError:
-            return "cannot_connect"
+            return "cannot_connect", None
         except ScheduleError:
-            return "invalid_schedule"
+            return "invalid_schedule", None
         finally:
             session.detach()
-        return None
+        return None, client.student_name
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Validate credentials before creating an entry."""
@@ -61,7 +61,10 @@ class AlfaSchoolConfigFlow(ConfigFlow, domain=DOMAIN):
             username = user_input[CONF_USERNAME].strip()
             await self.async_set_unique_id(username.casefold())
             self._abort_if_unique_id_configured()
-            if error := await self._validate(username, user_input[CONF_PASSWORD]):
+            error, student_name = await self._validate(
+                username, user_input[CONF_PASSWORD]
+            )
+            if error:
                 errors["base"] = error
             else:
                 return self.async_create_entry(
@@ -69,6 +72,7 @@ class AlfaSchoolConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_USERNAME: username,
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        CONF_NAME: student_name or "",
                     },
                     options={
                         CONF_INTERVAL_HOURS: user_input[CONF_INTERVAL_HOURS],
@@ -81,7 +85,6 @@ class AlfaSchoolConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(vol.Secret(CONF_PASSWORD)): str,
-                    vol.Optional(CONF_NAME, default=""): str,
                     **interval_schema().schema,
                 }
             ),
@@ -96,9 +99,10 @@ class AlfaSchoolConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         entry = self._get_reauth_entry()
         if user_input is not None:
-            if error := await self._validate(
+            error, _ = await self._validate(
                 entry.data[CONF_USERNAME], user_input[CONF_PASSWORD]
-            ):
+            )
+            if error:
                 errors["base"] = error
             else:
                 return self.async_update_reload_and_abort(
@@ -135,7 +139,9 @@ class AlfaSchoolOptionsFlow(OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_NAME, default=self.config_entry.options.get(CONF_NAME, "")
+                        CONF_NAME,
+                        default=self.config_entry.options.get(CONF_NAME, "").strip()
+                        or self.config_entry.data.get(CONF_NAME, ""),
                     ): str,
                     **interval_schema(
                         self.config_entry.options.get(
