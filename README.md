@@ -1,8 +1,6 @@
-# Alfa School Calendar для Home Assistant
+# Alfa School Calendar для Home Assistant - импорт календаря Alfa School
 
 ![Иконка интеграции](custom_components/alfaschool/brand/icon.png)
-
-Импорт календаря Alfa School.
 
 ## Требования
 
