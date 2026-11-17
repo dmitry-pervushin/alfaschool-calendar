@@ -1,116 +1,124 @@
-# Alfa School Calendar для Home Assistant - импорт календаря Alfa School
+# Alfa School Calendar for Home Assistant - import your Alfa School calendar
 
-![Иконка интеграции](custom_components/alfaschool/brand/icon.png)
+**English** · [Русский](README.ru.md)
 
-## Требования
+![Integration icon](custom_components/alfaschool/brand/icon.png)
 
-- Home Assistant **2026.11 или новее**.
-- Аккаунт на [my.alfaschool.ru](https://my.alfaschool.ru/).
-- Доступ Home Assistant к сайту школы.
+## Requirements
 
-Это независимая пользовательская интеграция, не официальный продукт Alfa School.
+- Home Assistant **2026.11 or later**.
+- An account at [my.alfaschool.ru](https://my.alfaschool.ru/).
+- Internet access from Home Assistant to the school website.
 
-## Установка
+This is an independent custom integration, not an official Alfa School product.
+
+## Installation
 
 ### HACS
 
-Требуется установленный [HACS](https://hacs.dev/). Репозиторий должен быть
-публичным: HACS не поддерживает приватные репозитории.
+[HACS](https://hacs.dev/) must be installed.
 
-1. Откройте **HACS → ⋮ → Пользовательские репозитории (Custom repositories)**.
-2. В поле **Repository** укажите:
+1. Open HACS and search for **Alfa School Calendar**.
+2. Open the integration and select **Download**.
+3. Restart Home Assistant.
+4. Add the integration as described under [Setup](#setup).
+
+#### If the integration does not appear in search
+
+Add the repository manually:
+
+1. Open **HACS → ⋮ → Custom repositories**.
+2. Enter the following URL in the **Repository** field:
+
    ```text
    https://github.com/dmitry-pervushin/alfaschool-calendar
    ```
-3. Выберите тип **Integration** и нажмите **Добавить (Add)**.
-4. Найдите **Alfa School Calendar** в HACS, откройте его и нажмите **Скачать (Download)**.
-5. Перезапустите Home Assistant.
-6. Добавьте интеграцию по инструкции в разделе [Настройка](#настройка).
 
-Интеграция устанавливается как пользовательский репозиторий и пока не включена
-в стандартный каталог HACS. Порядок добавления описан в
-[документации HACS](https://hacs.dev/docs/faq/custom_repositories/).
+3. Select **Integration** as the type and select **Add**.
+4. Return to HACS search and follow the installation steps above.
 
-### Вручную
+For more information, see the [HACS custom repository documentation](https://hacs.dev/docs/faq/custom_repositories/).
 
-1. Скачайте `alfaschool-integration.zip` со страницы
-   [последнего релиза](https://github.com/dmitry-pervushin/alfaschool-calendar/releases/latest).
-2. Распакуйте архив в каталог конфигурации Home Assistant, чтобы файл
-   `manifest.json` находился по пути `custom_components/alfaschool/manifest.json`.
-3. Перезапустите Home Assistant и перейдите к разделу [Настройка](#настройка).
+### Manual installation
 
-## Настройка
+1. Download `alfaschool-integration.zip` from the
+   [latest release](https://github.com/dmitry-pervushin/alfaschool-calendar/releases/latest).
+2. Extract the archive into your Home Assistant configuration directory.
+   The manifest should be at `custom_components/alfaschool/manifest.json`.
+3. Restart Home Assistant and continue with [Setup](#setup).
 
-1. Откройте **Настройки → Устройства и службы → Добавить интеграцию → Alfa School**.
-2. Введите логин и пароль школы. Имя ученика будет прочитано из профиля автоматически.
-   Укажите интервал обновления в часах:
-   `24` (по умолчанию), `8`, `4` или другое целое число от 1 до 24.
-   Значение `0` — **никогда не обновлять автоматически**, только вручную.
+## Setup
 
-Создаётся одна сущность календаря на аккаунт. Название — **Alfa School — Имя из профиля**.
-Порядок имени и фамилии сохраняется таким, как на сайте. Если сайт не сообщает имя,
-используется логин. Для другого аккаунта добавьте ещё
-одну запись интеграции.
-Вход и чтение текущего месяца проверяются до сохранения настроек.
+1. Go to **Settings → Devices & services → Add integration → Alfa School**.
+2. Enter your school login and password. The student's name is read automatically
+   from their profile. Choose an update interval in hours: `24` (the default),
+   `8`, `4`, or any whole number from 1 to 24.
+   Set it to `0` for **manual updates only**.
 
-Home Assistant создаёт `entity_id` из названия при первом добавлении:
-например, имя `Dmitry` даёт `calendar.alfa_school_dmitry`, а `Anna` —
-`calendar.alfa_school_anna`. Кириллица транслитерируется средствами HA.
-При совпадении имён HA добавляет суффикс (`_2` и т. д.); аккаунты, сессии
-и занятия остаются раздельными.
+Each account gets its own calendar, named **Alfa School — Name from profile**.
+Names keep the order used on the school website. If no name is available,
+the login is used instead. To connect another account, add another instance
+of the integration. Login and access to the current month's schedule are
+checked before saving your settings.
 
-Имя ученика можно менять через **Настроить**; пустое поле возвращает имя из профиля.
-У ранее подключённых аккаунтов без сохранённого имени оно определяется при
-первой успешной загрузке после обновления. Ручное имя имеет приоритет.
-При этом существующие `entity_id`
-и `unique_id` сохраняются, чтобы не ломать автоматизации. Уже установленные
-календари также сохраняют прежний `entity_id`. Если имя сущности или её ID
-изменены вручную в HA, интеграция сохраняет эти настройки пользователя.
+Home Assistant creates the `entity_id` from the calendar name when it is first
+added. For example, `Dmitry` becomes `calendar.alfa_school_dmitry`, and `Anna`
+becomes `calendar.alfa_school_anna`. Home Assistant transliterates Cyrillic names.
+If names match, Home Assistant adds a suffix such as `_2`. Accounts, sessions,
+and lessons remain separate.
 
-## Обновление
+You can change the student's name under **Configure**. Clear the field to use
+the profile name again. Existing accounts without a saved profile name will
+have it detected on the first successful load after updating. A name you enter
+manually takes priority.
 
-При установке через HACS откройте **Alfa School Calendar**, установите доступное
-обновление и перезапустите Home Assistant.
+Renaming a calendar preserves its existing `entity_id` and `unique_id`, so
+existing automations keep working. Previously installed calendars also keep
+their entity IDs. Names and entity IDs you customize in Home Assistant are
+preserved.
 
-При ручной установке скачайте ZIP нового релиза, замените папку
-`custom_components/alfaschool` и перезапустите Home Assistant.
-Существующую запись интеграции в настройках HA удалять не нужно.
+## Updating the integration
 
-## Ваше расписание в Home Assistant
+If installed through HACS, open **Alfa School Calendar**, install the available
+update, and restart Home Assistant.
 
-Занятия появятся в разделе **Календарь** Home Assistant. У каждого занятия
-будут указаны предмет, преподаватель, время начала и длительность. Время
-отображается в часовом поясе вашего Home Assistant.
+For a manual installation, download the ZIP from the new release, replace
+`custom_components/alfaschool`, and restart Home Assistant. Keep the existing
+integration entry in Home Assistant settings.
 
-По умолчанию загружаются занятия за последние 30 дней и на ближайшие 180 дней.
-Чтобы посмотреть другой период, перелистайте календарь — интеграция загрузит
-нужные месяцы. В режиме ручного обновления после перехода к другому периоду
-нужно обновить календарь вручную.
+## Your schedule in Home Assistant
 
-Назначайте, переносите и отменяйте занятия в личном кабинете Alfa School.
-После обновления календаря эти изменения появятся в Home Assistant.
-Блоки «Занятый период» не отображаются как занятия.
+Lessons appear in Home Assistant's **Calendar** section. Each lesson includes
+the subject, teacher, start time, and duration. Times are displayed in your
+Home Assistant time zone.
 
-### Когда обновляется расписание
+By default, the integration loads lessons from the past 30 days and the next
+180 days. Browse to another period to load the months you need. In manual
+update mode, refresh the calendar manually after browsing to a different period.
 
-Расписание загружается при запуске Home Assistant, а затем обновляется
-с выбранной вами периодичностью. Например, значение `4` означает обновление
-раз в четыре часа, а `24` — раз в сутки. Изменить интервал можно через
-**Настройки → Устройства и службы → Alfa School → Настроить**.
+Book, reschedule, and cancel lessons in your Alfa School account. Those changes
+will appear in Home Assistant after the calendar refreshes. Blocks marked
+“Busy period” are not shown as lessons.
 
-Если выбрать `0`, автоматическое обновление отключится. После загрузки
-при запуске Home Assistant расписание будет обновляться только по вашей команде.
+### When your schedule refreshes
 
-Перенос или отмена занятия станут видны после следующего обновления.
-Если хотите увидеть изменения сразу, обновите календарь вручную.
+Your schedule loads when Home Assistant starts, then refreshes at your chosen
+interval. For example, `4` means every four hours and `24` means once a day.
+Change this under **Settings → Devices & services → Alfa School → Configure**.
 
-### Как обновить календарь вручную
+Choose `0` to turn off automatic updates. After the initial load when Home
+Assistant starts, the schedule will refresh only when you request it.
 
-В разделе **Инструменты разработчика → Действия** выберите
-**Обновить сущность** (`homeassistant.update_entity`), укажите свой календарь
-Alfa School и выполните действие.
+Rescheduled and canceled lessons appear after the next refresh. To see changes
+sooner, refresh the calendar manually.
 
-Это же действие можно добавить к кнопке на панели или использовать в автоматизации:
+### Refreshing your calendar manually
+
+Go to **Developer tools → Actions**, select **Update entity**
+(`homeassistant.update_entity`), choose your Alfa School calendar, and run
+the action.
+
+You can also use this action in a dashboard button or an automation:
 
 ```yaml
 action: homeassistant.update_entity
@@ -118,21 +126,21 @@ target:
   entity_id: calendar.alfa_school_dmitry
 ```
 
-Замените `calendar.alfa_school_dmitry` на идентификатор своего календаря.
+Replace `calendar.alfa_school_dmitry` with your calendar's entity ID.
 
-### Если расписание недоступно
+### If your schedule is unavailable
 
-Если не удаётся связаться со школой, календарь временно станет недоступен.
-Проверьте подключение к интернету и попробуйте обновить его вручную.
-При включённом автоматическом обновлении интеграция повторит попытку сама.
+If the school website cannot be reached, the calendar becomes temporarily
+unavailable. Check your internet connection and try refreshing it manually.
+If automatic updates are enabled, the integration will retry on its own.
 
-Если изменился пароль, Home Assistant предложит войти заново.
-Удалять интеграцию и настраивать календарь с нуля не нужно.
+If your password changes, Home Assistant will ask you to sign in again.
+There is no need to remove the integration or set up your calendar from scratch.
 
-## Напоминание за 15 минут
+## A reminder 15 minutes before a lesson
 
 ```yaml
-alias: Напомнить о занятии Alfa School
+alias: Alfa School lesson reminder
 triggers:
   - trigger: calendar
     entity_id: calendar.alfa_school_dmitry
@@ -141,25 +149,25 @@ triggers:
 actions:
   - action: persistent_notification.create
     data:
-      title: Скоро занятие
+      title: Lesson starting soon
       message: "{{ trigger.calendar_event.summary }}"
 mode: parallel
 ```
 
-Изменения расписания обнаруживаются только при очередном опросе. При интервале
-24 часа срочный перенос может стать известен HA с задержкой до суток.
+Schedule changes are detected when the calendar refreshes. With a 24-hour
+interval, a last-minute reschedule may take up to a day to appear in Home Assistant.
 
-## Учётные данные
+## Credentials
 
-Логин и пароль вводятся в HA и хранятся в его стандартной записи конфигурации.
-Интеграция обращается только к `https://my.alfaschool.ru`, не записывает пароль
-в журнал и не публикует расписание через `/local/`. Cookies хранятся в памяти
-в отдельной сессии каждого аккаунта. Доступ к аккаунту используется только
-для входа и чтения страниц расписания.
+Your login and password are entered in Home Assistant and stored in its standard
+configuration entry. The integration connects only to `https://my.alfaschool.ru`,
+does not log your password, and does not publish your schedule through `/local/`.
+Cookies are kept in memory in a separate session for each account. Account access
+is used only to sign in and read schedule pages.
 
-Чтобы удалить интеграцию: **Настройки → Устройства и службы → Alfa School → Удалить**.
-После выгрузки останавливаются опрос и сессия аккаунта.
+To remove the integration, go to **Settings → Devices & services → Alfa School
+→ Delete**. Unloading the integration stops updates and closes the account session.
 
-## Лицензия
+## License
 
 [BSD Zero Clause (0BSD)](LICENSE).
